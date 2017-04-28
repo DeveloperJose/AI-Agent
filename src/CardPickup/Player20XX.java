@@ -3,47 +3,18 @@ package CardPickup;
 import java.util.Random;
 
 /**
- * Some important variables inherited from the Player Class:
- * protected Node[] graph; //Contains the entire graph
- * protected Hand hand; //Contains your current hand (Use the cardsHole array
- * list)
- * protected int turnsRemaining; //Number of turns before the game ends
- * protected int currentNode; //Your current location
- * protected int oppNode; //Opponent's current position
- * protected Card oppLastCard; //Opponent's last picked up card
- * 
- * Important methods inherited from Player Class:
- * Method that is used to determine if a move is valid. This method should be
- * used to help players
- * determine if their actions are valid. GameMaster has a local copy of this
- * method and all the
- * required variables (such as the true graph), so manipulating the variables to
- * turn a previously
- * invalid action in to a "valid" one will not help you as the GameMaster will
- * still see the action
- * as invalid.
- * protected boolean isValidAction(Action a); //This method can be used to
- * determine if an action is valid
- *
- * NOTE TO STUDENTS: The game master will only tell the player the results of
- * your and your opponents actions.
- * It will not update your graph for you. That is something we left you to do so
- * that you can update your
- * graphs, opponent hand, horoscope, etc. intelligently and however you like.
- * 
- * 
- * @author Marcus Gutierrez
- * @version 04/15/2015
+ * @author Jose Perez, Tomas Chagoya, Brandon Delgado
+ * @version 04/27/20XX
  */
-public class TestPlayer extends Player {
-    protected final String newName = "TestPlayer"; // Overwrite this variable in
-                                                   // your player subclass
+public class Player20XX extends Player {
+    protected final String newName = "20XX"; // Overwrite this variable in your
+                                             // player subclass
 
     /**
      * Do not alter this constructor as nothing has been initialized yet. Please
      * use initialize() instead
      */
-    public TestPlayer() {
+    public Player20XX() {
         super();
         playerName = newName;
     }
