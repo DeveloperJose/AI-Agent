@@ -25,19 +25,24 @@ public class Player20XX extends Player {
     // It seems sabotage isn't as good as it sounds
     private static boolean shouldSabotage = false;
     
-    // Things used by the player
+    // Used for random number generation
     private Random rand;
+    
+    // Is the game of certainty?
+    private boolean isCertain;
+    
+    // Used by the player during certainty pairing
     private boolean[] pairVisited;
     private int pairVisitedCount;
-    private boolean isCertain;
+    
+    // Used for sabotage
     private List<Card> opponentCards;
 
     public void initialize() {
         rand = new Random(System.nanoTime());
+        isCertain = graph[0].getPossibleCards().size() == 1;
         pairVisited = new boolean[this.graph.length];
         pairVisitedCount = 0;
-
-        isCertain = graph[0].getPossibleCards().size() == 1;
         opponentCards = new ArrayList<>();
     }
 
@@ -50,6 +55,12 @@ public class Player20XX extends Player {
         playerName = newName;
     }
 
+    /**
+     * Print method used for debugging
+     * Will only print if isVerbose is enabled
+     * @param format String format to use. Same as the one in String.format()
+     * @param args Object arguments to use for String formatting
+     */
     private void println(String format, Object... args) {
         if (!isVerbose)
             return;
@@ -74,7 +85,9 @@ public class Player20XX extends Player {
         oppNode = opponentNode;
         if (opponentPickedUp) {
             oppLastCard = c;
+            // Update our memory of opponent cards
             opponentCards.add(c);
+            // We can't pick a card there anymore so clear the node in the graph
             graph[opponentNode].clearPossibleCards();
         } else
             oppLastCard = null;
@@ -92,28 +105,43 @@ public class Player20XX extends Player {
     protected void actionResult(int currentNode, Card c) {
         this.currentNode = currentNode;
         if (c != null) {
+            // Update our hand
             addCardToHand(c);
+            // We can't pick a card here anymore so clear the node in the graph
             graph[currentNode].clearPossibleCards();
         }
 
     }
 
+    /**
+     * Measures the strength of a list of cards
+     * Higher strength means better cards
+     * @param possibleCards List of cards to evaluate
+     * @return Double representing strength of cards
+     */
     public double getPairStrength(List<Card> possibleCards){
         double result = 0;
         
         for(Card card : possibleCards){
+            // Pairs get their ranks increased by 1.5
             if(canFormPair(card))
-                result += card.getRank() * 3;
+                result += card.getRank() * 1.5;
+            // Pairs that can be stolen from the opponent aren't affected
             else if(shouldSabotage && canFormPairOpponent(card))
-                result += card.getRank() * 2;
-            else
                 result += card.getRank();
+            // Cards that cannot be paired are given half their rank as value
+            else
+                result += card.getRank() * 0.5;
         }
         
         return result;
     }
 
-
+    /**
+     * Checks if we can form a pair with the given card with what we have in our hand
+     * @param card Card to check
+     * @return True if we can form a pair with it
+     */
     public boolean canFormPair(Card card) {
         for (int i = 0; i < hand.getNumHole(); i++) {
             Card cardInHand = hand.getHoleCard(i);
@@ -124,6 +152,11 @@ public class Player20XX extends Player {
         return false;
     }
 
+    /**
+     * Checks if the opponent can form a pair with the given card based on what we know they have
+     * @param card Card to check
+     * @return True if the opponent can form a pair with it
+     */
     public boolean canFormPairOpponent(Card card) {
         for (Card opp : opponentCards) {
             if (opp.getRank() == card.getRank())
@@ -132,6 +165,12 @@ public class Player20XX extends Player {
         return false;
     }
 
+    /**
+     * Gets the list of possible cards at the specified node
+     * Removes cards that we know are in our hand and the opponent's
+     * @param nodeID Node to check
+     * @return Curated list of possible cards at the specified node
+     */
     public List<Card> getPossibleCards(int nodeID) {
         Node node = graph[nodeID];
         List<Card> possible = node.getPossibleCards();
@@ -141,6 +180,12 @@ public class Player20XX extends Player {
             Card cardInHand = hand.getHoleCard(i);
             possible.remove(cardInHand);
         }
+        
+        // Remove the cards we know the opponent has
+        //for(int i = 0; i < opponentCards.size(); i++){
+            //Card cardInOpponent = opponentCards.get(i);
+            //possible.remove(cardInOpponent);
+        //}
         return possible;
     }
 
