@@ -112,6 +112,12 @@ public class Player20XX extends Player {
         }
 
     }
+    
+    public int getRank(Card card){
+        if(card.getRank() == 1) // Ace
+            return 14;
+        return card.getRank();
+    }
 
     /**
      * Measures the strength of a list of cards
@@ -123,15 +129,12 @@ public class Player20XX extends Player {
         double result = 0;
         
         for(Card card : possibleCards){
-            // Pairs get their ranks increased by 1.5
             if(canFormPair(card))
-                result += card.getRank() * 1.5;
-            // Pairs that can be stolen from the opponent aren't affected
+                result += (getRank(card) * 20);
             else if(shouldSabotage && canFormPairOpponent(card))
-                result += card.getRank();
-            // Cards that cannot be paired are given half their rank as value
+                result += getRank(card) * 10;
             else
-                result += card.getRank() * 0.5;
+                result += getRank(card) * 2;
         }
         
         return result;
@@ -182,10 +185,10 @@ public class Player20XX extends Player {
         }
         
         // Remove the cards we know the opponent has
-        //for(int i = 0; i < opponentCards.size(); i++){
-            //Card cardInOpponent = opponentCards.get(i);
-            //possible.remove(cardInOpponent);
-        //}
+        for(int i = 0; i < opponentCards.size(); i++){
+            Card cardInOpponent = opponentCards.get(i);
+            possible.remove(cardInOpponent);
+        }
         return possible;
     }
 
@@ -315,6 +318,7 @@ public class Player20XX extends Player {
         if(getHandSize() == 4 && isShowingResults)
             System.out.printf("Pair %s, Sabotage %s, Random %s\n", pairCount, sabotageCount, randomCount);
         
+        //return makeActionUncertain();
         
         return (isCertain) ? makeActionCertain() : makeActionUncertain();
     }

@@ -15,9 +15,9 @@ public class GameMaster {
 
     private static boolean verbose = false; // Set to false if you do not want
                                            // much detail printed to console
-    private static int numGames = 5; // use a small number for quick tests, a
+    private static int numGames = 20; // use a small number for quick tests, a
                                      // large one to be comprehensive
-    private static int parameterSetting = 5; // see changeParameters()
+    private static int parameterSetting = 3; // see changeParameters()
 
     /**
      * You should edit this method to include your player agent
