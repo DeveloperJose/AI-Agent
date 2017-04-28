@@ -3,14 +3,43 @@ package CardPickup;
 import java.util.*;
 
 /**
+ * Simple Functional Agent
+ * Attempts to create pairs based on their own hand and neighbors
  * @author Jose Perez, Tomas Chagoya, Brandon Delgado
  * @version 04/27/20XX
  */
 public class Player20XX extends Player {
-    protected final String newName = "20XX"; // Overwrite this variable in your
-                                             // player subclass
+    protected final String newName = "20XX";
     
+    // For printing debugging stuff
     private static final boolean isVerbose = false;
+    private static final boolean isShowingResults = false;
+    private static int pairCount = 0;
+    private static int randomCount = 0;
+    private static int sabotageCount = 0;
+    
+    // {Certain} No Sabotage (30 games): 102 wins, 5276.782 score
+    // {Certain} Sabotage (30 games): 97 wins, 5102.937 score
+    // {Uncertain} No Sabotage (20 games): 82 wins, 3678.437 score
+    // {Uncertain} Sabotage (20 games): 75 wins, 3279.3298 score
+    // It seems sabotage isn't as good as it sounds
+    private static boolean shouldSabotage = false;
+    
+    // Things used by the player
+    private Random rand;
+    private boolean[] pairVisited;
+    private int pairVisitedCount;
+    private boolean isCertain;
+    private List<Card> opponentCards;
+
+    public void initialize() {
+        rand = new Random(System.nanoTime());
+        pairVisited = new boolean[this.graph.length];
+        pairVisitedCount = 0;
+
+        isCertain = graph[0].getPossibleCards().size() == 1;
+        opponentCards = new ArrayList<>();
+    }
 
     /**
      * Do not alter this constructor as nothing has been initialized yet. Please
@@ -21,11 +50,11 @@ public class Player20XX extends Player {
         playerName = newName;
     }
 
-    private boolean[] visited;
-    private int visitedCount;
-    public void initialize() {
-        visited = new boolean[this.graph.length];
-        visitedCount = 0;
+    private void println(String format, Object... args) {
+        if (!isVerbose)
+            return;
+
+        System.out.printf(format + "\n", args);
     }
 
     /**
@@ -45,6 +74,7 @@ public class Player20XX extends Player {
         oppNode = opponentNode;
         if (opponentPickedUp) {
             oppLastCard = c;
+            opponentCards.add(c);
             graph[opponentNode].clearPossibleCards();
         } else
             oppLastCard = null;
@@ -68,24 +98,44 @@ public class Player20XX extends Player {
 
     }
 
+    public double getPairStrength(List<Card> possibleCards){
+        double result = 0;
+        
+        for(Card card : possibleCards){
+            if(canFormPair(card))
+                result += card.getRank() * 3;
+            else if(shouldSabotage && canFormPairOpponent(card))
+                result += card.getRank() * 2;
+            else
+                result += card.getRank();
+        }
+        
+        return result;
+    }
+
+
     public boolean canFormPair(Card card) {
         for (int i = 0; i < hand.getNumHole(); i++) {
             Card cardInHand = hand.getHoleCard(i);
-            if(isVerbose){
-                System.out.printf("20XX {%s, %s}\n", card.getRank(), cardInHand.getRank());
-                System.out.printf("Card: " + cardInHand.shortName() + "\n");
-            }
-            if(card.getRank() == cardInHand.getRank())
+
+            if (card.getRank() == cardInHand.getRank())
                 return true;
-            
         }
         return false;
     }
-    
-    public List<Card> getPossibleCards(int nodeID){
+
+    public boolean canFormPairOpponent(Card card) {
+        for (Card opp : opponentCards) {
+            if (opp.getRank() == card.getRank())
+                return true;
+        }
+        return false;
+    }
+
+    public List<Card> getPossibleCards(int nodeID) {
         Node node = graph[nodeID];
         List<Card> possible = node.getPossibleCards();
-        
+
         // Remove the cards we already have
         for (int i = 0; i < hand.getNumHole(); i++) {
             Card cardInHand = hand.getHoleCard(i);
@@ -93,79 +143,134 @@ public class Player20XX extends Player {
         }
         return possible;
     }
-    
-    public Action checkNode(int nodeID){
-        if(visited[nodeID])
+
+    public Action getActionCertain(int nodeID) {
+        if (pairVisited[nodeID])
             return null;
-        
+
         List<Card> possibleCards = getPossibleCards(nodeID);
-        
-        // No uncertainty
-        if(possibleCards.size() == 1){
-            visited[nodeID] = true;
-            visitedCount++;
-            Card card = possibleCards.get(0);
-            if(isVerbose){
-                System.out.println("Card in node: " + card.shortName() + ", Node ID: " + nodeID);
-            }
-            if (canFormPair(card)){
-                return new Action(ActionType.PICKUP, nodeID);
-            }
+        if (possibleCards.size() != 1)
+            return null;
+
+        pairVisited[nodeID] = true;
+        pairVisitedCount++;
+        Card card = possibleCards.get(0);
+
+        if (canFormPair(card)) {
+            println("Making a pair with %s", card.shortName());
+            pairCount++;
+            return new Action(ActionType.PICKUP, nodeID);
         }
-        
+
         return null;
     }
     
-    public Action getRandomAction(){
-        Random r = new Random();
-        
-        int count = 0;
-        
-        while(true){
-           int randomIndex = r.nextInt(graph[currentNode].getNeighborAmount());
-           Node neighbor = graph[currentNode].getNeighbor(randomIndex);
-           int neighborID = neighbor.getNodeID();
-           
-           if(getPossibleCards(neighborID).size() > 0){
-               if(isVerbose){
-                   System.out.println("Picked randomly");
-               }
-               return new Action(ActionType.PICKUP, neighborID);
-           }
-           
-           count++;
-           
-           if(count > 50){
-               if(isVerbose){
-                   System.out.println("Avoided infinite loop");
-               }
-               return new Action(ActionType.MOVE, neighbor.getNodeID());
-           }
+    public Action getActionCertainSabotage(int nodeID) {
+        List<Card> possibleCards = getPossibleCards(nodeID);
+
+        if (possibleCards.size() != 1)
+            return null;
+
+        Card card = possibleCards.get(0);
+
+        if (canFormPairOpponent(card)) {
+            println("Sabotaging by taking %s", card.shortName());
+            sabotageCount++;
+            return new Action(ActionType.PICKUP, nodeID);
         }
-       
-    }
-    
-    public Action makeAction() {
-        // We visited all nodes
-        if(visitedCount >= graph.length)
-            return getRandomAction();
-        
-        // *************** Case 1: Certainty
-        Action action = checkNode(currentNode);
-        
-        if(action != null)
-            return action;
-        
-        // No cards in ours. Check neighbors
-        for (int i = 0; i < graph[currentNode].getNeighborAmount(); i++) {
-            int neighborID = graph[currentNode].getNeighbor(i).getNodeID();
-            action = checkNode(neighborID);
-            
-            if(action != null)
-                return action;
-        }
-        
-        return getRandomAction();
+
+        return null;
     }
 
+    public Action getActionRandom() {
+        int loopCount = 0;
+        int randomIndex;
+        int neighborID;
+        do {
+            randomIndex = rand.nextInt(graph[currentNode].getNeighborAmount());
+            neighborID = graph[currentNode].getNeighbor(randomIndex).getNodeID();
+
+            if (getPossibleCards(neighborID).size() > 0) {
+                println("Random choosing");
+                randomCount++;
+                return new Action(ActionType.PICKUP, neighborID);
+            }
+
+            loopCount++;
+        } while (loopCount < 15);
+
+        println("Avoided infinite loop");
+        return new Action(ActionType.MOVE, neighborID);
+    }
+    
+    public Action makeActionCertain(){
+        // We haven't visited all nodes yet so attempt to find pairs
+        if (pairVisitedCount < graph.length) {
+            // Check for a pair in our current node
+            Action action = getActionCertain(currentNode);
+
+            // We found a pair in our current node
+            if (action != null)
+                return action;
+
+            // No pairs in ours. Check neighbors
+            for (int i = 0; i < graph[currentNode].getNeighborAmount(); i++) {
+                int neighborID = graph[currentNode].getNeighbor(i).getNodeID();
+
+                action = getActionCertain(neighborID);
+
+                if (action != null)
+                    return action;
+            }
+        }
+        // We finished exploring. Try sabotage
+        else if (shouldSabotage) {
+            // No pairs anywhere. Sabotage the opponent.
+            Action action = getActionCertainSabotage(currentNode);
+
+            if (action != null)
+                return action;
+
+            for (int i = 0; i < graph[currentNode].getNeighborAmount(); i++) {
+                int neighborID = graph[currentNode].getNeighbor(i).getNodeID();
+                action = getActionCertainSabotage(neighborID);
+
+                if (action != null)
+                    return action;
+            }
+        }
+        // Nothing is able to be done. Pick randomly
+        return getActionRandom();
+    }
+    
+    public Action makeActionUncertain(){
+        // Check the strength of our current node and neighbors.
+        // Pick the one with the highest pair strength
+        double highestStrength = getPairStrength(getPossibleCards(currentNode));
+        int nodeID = currentNode;
+        
+        
+        for(Node neighbor : graph[currentNode].getNeighborList()){
+            double strength = getPairStrength(getPossibleCards(neighbor.getNodeID()));
+            
+            if(strength > highestStrength){
+                highestStrength = strength;
+                nodeID = neighbor.getNodeID();
+            }
+        }
+        
+        // Everything around us has been taken?!?
+        if(highestStrength == 0)
+            return getActionRandom();
+        else
+            return new Action(ActionType.PICKUP, nodeID);
+    }
+
+    public Action makeAction() {
+        if(getHandSize() == 4 && isShowingResults)
+            System.out.printf("Pair %s, Sabotage %s, Random %s\n", pairCount, sabotageCount, randomCount);
+        
+        
+        return (isCertain) ? makeActionCertain() : makeActionUncertain();
+    }
 }

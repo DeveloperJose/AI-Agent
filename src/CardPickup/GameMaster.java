@@ -13,11 +13,11 @@ import java.util.ArrayList;
  */
 public class GameMaster {
 
-    private static boolean verbose = true; // Set to false if you do not want
+    private static boolean verbose = false; // Set to false if you do not want
                                            // much detail printed to console
-    private static int numGames = 1; // use a small number for quick tests, a
+    private static int numGames = 20; // use a small number for quick tests, a
                                      // large one to be comprehensive
-    private static int parameterSetting = 3; // see changeParameters()
+    private static int parameterSetting = 5; // see changeParameters()
 
     /**
      * You should edit this method to include your player agent
@@ -66,6 +66,7 @@ public class GameMaster {
                         evaluateHands(hands[2], hands[3], ranks, wins, p1, p2, players);
                         if (verbose)
                             System.out.println();
+                        
                     }
                 }
             }
