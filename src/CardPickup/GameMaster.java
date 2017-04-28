@@ -15,9 +15,9 @@ public class GameMaster {
 
     private static boolean verbose = false; // Set to false if you do not want
                                            // much detail printed to console
-    private static int numGames = 50; // use a small number for quick tests, a
+    private static int numGames = 20; // use a small number for quick tests, a
                                      // large one to be comprehensive
-    private static int parameterSetting = 5; // see changeParameters()
+    private static int parameterSetting = 1; // see changeParameters()
 
     /**
      * You should edit this method to include your player agent
@@ -133,7 +133,7 @@ public class GameMaster {
         p1.setCurrentNode(p1Profile.getCurrentLocation());
 
         // Player 2
-        p2.setGraph(g.generateHiddenGraph());
+        p2.setGraph(Parser.parseGraph(gameSeed+".hidden").generateHiddenGraph());
         p2Profile.setCurrentHand(Parser.parseHand(gameSeed, 2));
         p2Profile.setCurrentLocation(1);
         // Update the player 2
