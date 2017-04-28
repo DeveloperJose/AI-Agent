@@ -1,6 +1,6 @@
 package CardPickup;
 
-import java.util.Random;
+import java.util.*;
 
 /**
  * @author Jose Perez, Tomas Chagoya, Brandon Delgado
@@ -9,6 +9,8 @@ import java.util.Random;
 public class Player20XX extends Player {
     protected final String newName = "20XX"; // Overwrite this variable in your
                                              // player subclass
+    
+    private static final boolean isVerbose = false;
 
     /**
      * Do not alter this constructor as nothing has been initialized yet. Please
@@ -19,8 +21,11 @@ public class Player20XX extends Player {
         playerName = newName;
     }
 
+    private boolean[] visited;
+    private int visitedCount;
     public void initialize() {
-        // WRITE ANY INITIALIZATION COMPUTATIONS HERE
+        visited = new boolean[this.graph.length];
+        visitedCount = 0;
     }
 
     /**
@@ -38,9 +43,10 @@ public class Player20XX extends Player {
      */
     protected void opponentAction(int opponentNode, boolean opponentPickedUp, Card c) {
         oppNode = opponentNode;
-        if (opponentPickedUp)
+        if (opponentPickedUp) {
             oppLastCard = c;
-        else
+            graph[opponentNode].clearPossibleCards();
+        } else
             oppLastCard = null;
     }
 
@@ -55,21 +61,111 @@ public class Player20XX extends Player {
      */
     protected void actionResult(int currentNode, Card c) {
         this.currentNode = currentNode;
-        if (c != null)
+        if (c != null) {
             addCardToHand(c);
+            graph[currentNode].clearPossibleCards();
+        }
+
     }
 
-    /**
-     * Player logic goes here
-     */
-    public Action makeAction() {
+    public boolean canFormPair(Card card) {
+        for (int i = 0; i < hand.getNumHole(); i++) {
+            Card cardInHand = hand.getHoleCard(i);
+            if(isVerbose){
+                System.out.printf("20XX {%s, %s}\n", card.getRank(), cardInHand.getRank());
+                System.out.printf("Card: " + cardInHand.shortName() + "\n");
+            }
+            if(card.getRank() == cardInHand.getRank())
+                return true;
+            
+        }
+        return false;
+    }
+    
+    public List<Card> getPossibleCards(int nodeID){
+        Node node = graph[nodeID];
+        List<Card> possible = node.getPossibleCards();
+        
+        // Remove the cards we already have
+        for (int i = 0; i < hand.getNumHole(); i++) {
+            Card cardInHand = hand.getHoleCard(i);
+            possible.remove(cardInHand);
+        }
+        return possible;
+    }
+    
+    public Action checkNode(int nodeID){
+        if(visited[nodeID])
+            return null;
+        
+        List<Card> possibleCards = getPossibleCards(nodeID);
+        
+        // No uncertainty
+        if(possibleCards.size() == 1){
+            visited[nodeID] = true;
+            visitedCount++;
+            Card card = possibleCards.get(0);
+            if(isVerbose){
+                System.out.println("Card in node: " + card.shortName() + ", Node ID: " + nodeID);
+            }
+            if (canFormPair(card)){
+                return new Action(ActionType.PICKUP, nodeID);
+            }
+        }
+        
+        return null;
+    }
+    
+    public Action getRandomAction(){
         Random r = new Random();
-        int neighbor;
-        if (graph[currentNode].getNeighborAmount() == 1)
-            neighbor = graph[currentNode].getNeighbor(0).getNodeID();
-        else
-            neighbor = graph[currentNode].getNeighbor(r.nextInt(graph[currentNode].getNeighborAmount())).getNodeID();
-        return new Action(ActionType.PICKUP, neighbor);
+        
+        int count = 0;
+        
+        while(true){
+           int randomIndex = r.nextInt(graph[currentNode].getNeighborAmount());
+           Node neighbor = graph[currentNode].getNeighbor(randomIndex);
+           int neighborID = neighbor.getNodeID();
+           
+           if(getPossibleCards(neighborID).size() > 0){
+               if(isVerbose){
+                   System.out.println("Picked randomly");
+               }
+               return new Action(ActionType.PICKUP, neighborID);
+           }
+           
+           count++;
+           
+           if(count > 50){
+               if(isVerbose){
+                   System.out.println("Avoided infinite loop");
+               }
+               return new Action(ActionType.MOVE, neighbor.getNodeID());
+           }
+        }
+       
+    }
+    
+    public Action makeAction() {
+        // We visited all nodes
+        if(visitedCount >= graph.length)
+            return getRandomAction();
+        
+        // *************** Case 1: Certainty
+        Action action = checkNode(currentNode);
+        
+        if(action != null)
+            return action;
+        
+        // No cards in ours. Check neighbors
+        for (int i = 0; i < graph[currentNode].getNeighborAmount(); i++) {
+            int neighborID = graph[currentNode].getNeighbor(i).getNodeID();
+            action = checkNode(neighborID);
+            
+            if(action != null)
+                return action;
+        }
+        
+        return getRandomAction();
     }
 
 }
