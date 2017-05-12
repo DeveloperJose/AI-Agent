@@ -8,11 +8,11 @@ import java.util.*;
  * @author Jose Perez, Tomas Chagoya, Brandon Delgado
  * @version 04/27/20XX
  */
-public class Player20XX extends Player {
-    protected final String newName = "20XX";
+public class DreamDestroyer extends Player {
+    protected final String newName = "DreamDestroyer";
     
     // For printing debugging stuff
-    private static final boolean isVerbose = false;
+    private static final boolean isVerbose = true;
     
     // From my own testing of 20, 30, and 50 games with different uncertainty
     // You seem to only win a handful more games in exchange for a lower hand rank
@@ -21,20 +21,26 @@ public class Player20XX extends Player {
     // Used for random number generation
     private Random rand;
     
-    // Used for sabotage
-    private List<Card> opponentCards;
+    private Card[] opponentCards;
+    private int opponentCardID;
+    
+    private boolean isCertain;
+    
+    private HandEvaluator handEvaluator;
 
     public void initialize() {
         rand = new Random(System.nanoTime());
-        opponentCards = new ArrayList<>();
-        //isCertain = graph[0].getPossibleCards().size() == 1;
+        opponentCards = new Card[3];
+        opponentCardID = 0;
+        isCertain = graph[0].getPossibleCards().size() == 1;
+        handEvaluator = new HandEvaluator();
     }
 
     /**
      * Do not alter this constructor as nothing has been initialized yet. Please
      * use initialize() instead
      */
-    public Player20XX() {
+    public DreamDestroyer() {
         super();
         playerName = newName;
     }
@@ -70,7 +76,9 @@ public class Player20XX extends Player {
         if (opponentPickedUp) {
             oppLastCard = c;
             // Update our memory of opponent cards
-            opponentCards.add(c);
+            opponentCards[opponentCardID] = c;
+            opponentCardID++;
+            
             // We can't pick a card there anymore so clear the node in the graph
             graph[opponentNode].clearPossibleCards();
         } else
@@ -96,12 +104,6 @@ public class Player20XX extends Player {
         }
 
     }
-    
-    public int getRank(Card card){
-        if(card.getRank() == 1) // Ace
-            return 14;
-        return card.getRank();
-    }
 
     /**
      * Measures the strength of a list of cards
@@ -109,47 +111,19 @@ public class Player20XX extends Player {
      * @param possibleCards List of cards to evaluate
      * @return Double representing strength of cards
      */
-    public double getPairStrength(List<Card> possibleCards){
-        double result = 0;
-        
+    public float getPairStrength(List<Card> possibleCards){
+        Hand h2 = new Hand();
         for(Card card : possibleCards){
-            if(canFormPair(card))
-                result += (getRank(card) * 20);
-            else if(shouldSabotage && canFormPairOpponent(card))
-                result += getRank(card) * 10;
-            else
-                result += getRank(card) * 2;
+            h2.addHoleCard(card);
         }
         
-        return result;
-    }
-
-    /**
-     * Checks if we can form a pair with the given card with what we have in our hand
-     * @param card Card to check
-     * @return True if we can form a pair with it
-     */
-    public boolean canFormPair(Card card) {
         for (int i = 0; i < hand.getNumHole(); i++) {
             Card cardInHand = hand.getHoleCard(i);
-
-            if (card.getRank() == cardInHand.getRank())
-                return true;
+            h2.addHoleCard(cardInHand);
         }
-        return false;
-    }
-
-    /**
-     * Checks if the opponent can form a pair with the given card based on what we know they have
-     * @param card Card to check
-     * @return True if the opponent can form a pair with it
-     */
-    public boolean canFormPairOpponent(Card card) {
-        for (Card opp : opponentCards) {
-            if (opp.getRank() == card.getRank())
-                return true;
-        }
-        return false;
+        float rank = handEvaluator.rankHand(h2);
+        //println("Hand: %s ", HandEvaluator.nameHand(rank));
+        return rank;
     }
 
     /**
@@ -160,7 +134,7 @@ public class Player20XX extends Player {
      */
     public List<Card> getPossibleCards(int nodeID) {
         Node node = graph[nodeID];
-        List<Card> possible = node.getPossibleCards();
+        ArrayList<Card> possible = node.getPossibleCards();
 
         // Remove the cards we already have
         for (int i = 0; i < hand.getNumHole(); i++) {
@@ -169,10 +143,10 @@ public class Player20XX extends Player {
         }
         
         // Remove the cards we know the opponent has
-        for(int i = 0; i < opponentCards.size(); i++){
-            Card cardInOpponent = opponentCards.get(i);
+        for(Card cardInOpponent : opponentCards){
             possible.remove(cardInOpponent);
         }
+        
         return possible;
     }
 
@@ -199,11 +173,11 @@ public class Player20XX extends Player {
     public Action makeAction() {
         // Check the strength of our current node and neighbors.
         // Pick the one with the highest pair strength
-        double highestStrength = getPairStrength(getPossibleCards(currentNode));
+        float highestStrength = getPairStrength(getPossibleCards(currentNode));
         int nodeID = currentNode;    
         
         for(Node neighbor : graph[currentNode].getNeighborList()){
-            double strength = getPairStrength(getPossibleCards(neighbor.getNodeID()));
+            float strength = getPairStrength(getPossibleCards(neighbor.getNodeID()));
             
             if(strength > highestStrength){
                 highestStrength = strength;
@@ -215,7 +189,9 @@ public class Player20XX extends Player {
         // Pick a random one to go to
         if(highestStrength == 0)
             return getActionRandom();
-        else
+        else{
+            //println("Highest: %s", HandEvaluator.nameHand(highestStrength));
             return new Action(ActionType.PICKUP, nodeID);
+        }
     }
 }

@@ -15,9 +15,9 @@ public class GameMaster {
 
     private static boolean verbose = false; // Set to false if you do not want
                                            // much detail printed to console
-    private static int numGames = 20; // use a small number for quick tests, a
+    private static int numGames = 10; // use a small number for quick tests, a
                                      // large one to be comprehensive
-    private static int parameterSetting = 1; // see changeParameters()
+    private static int parameterSetting = 3; // see changeParameters()
 
     /**
      * You should edit this method to include your player agent
@@ -32,7 +32,11 @@ public class GameMaster {
         else if (name.equalsIgnoreCase("HankScorpio"))
             return new HankScorpio();
         else if (name.equalsIgnoreCase("20XX"))
-            return new Player20XX();
+            return new _20XX();
+        else if(name.equalsIgnoreCase("BoyFromSchool"))
+            return new BoyFromSchool();
+        else if(name.equalsIgnoreCase("DreamDestroyer"))
+            return new DreamDestroyer();
 
         return null;
     }
@@ -47,10 +51,12 @@ public class GameMaster {
         generateGraphs(numGames);
 
         ArrayList<Player> players = new ArrayList<Player>();
-        players.add(new TestPlayer());
-        players.add(new MaxPower());
-        players.add(new HankScorpio());
-        players.add(new Player20XX());
+        //players.add(new TestPlayer());
+        //players.add(new MaxPower());
+        //players.add(new HankScorpio());
+        players.add(new _20XX());
+        //players.add(new BoyFromSchool());
+        players.add(new DreamDestroyer());
 
         float[] ranks = new float[players.size()];
         double[] wins = new double[players.size()];
