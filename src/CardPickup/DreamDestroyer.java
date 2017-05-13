@@ -21,7 +21,7 @@ public class DreamDestroyer extends Player {
     // Used for random number generation
     private Random rand;
 
-    private Card[] opponentCards;
+    private List<Card> opponentCards;
     private int opponentCardID;
 
     private boolean isCertain;
@@ -78,7 +78,7 @@ public class DreamDestroyer extends Player {
         long startTime = System.currentTimeMillis();
 
         allAvailableCards = new TreeSet<>();
-        String str = "";
+        
 
         for (int i = 0; i < graph.length; i++) {
             List<Integer> nIntegers = new ArrayList<>();
@@ -87,13 +87,16 @@ public class DreamDestroyer extends Player {
 
                 for (Card card : neighbor.getPossibleCards()) {
                     allAvailableCards.add(new CardComparator(card));
-                    str += card.shortName() + ", ";
                 }
             }
             println("Node %s, %s", i, Arrays.toString(nIntegers.toArray()));
         }
+        
+        String str = "";
+        for(CardComparator card : allAvailableCards){
+            str += card.card.shortName() + ", ";
+        }
         println("Str: " + str);
-
         // Remove cards we have in our hand
         for (int i = 0; i < hand.getNumHole(); i++) {
             allAvailableCards.remove(new CardComparator(hand.getHoleCard(i)));
@@ -102,7 +105,7 @@ public class DreamDestroyer extends Player {
         visited = new boolean[graph.length];
         frontier = new PriorityQueue<>();
         rand = new Random(System.nanoTime());
-        opponentCards = new Card[3];
+        opponentCards = new ArrayList<>();
         opponentCardID = 0;
         isCertain = Parameters.NUM_POSSIBLE_CARDS == 1;
         handEvaluator = new HandEvaluator();
@@ -151,7 +154,7 @@ public class DreamDestroyer extends Player {
         if (opponentPickedUp) {
             oppLastCard = c;
             // Update our memory of opponent cards
-            opponentCards[opponentCardID] = c;
+            opponentCards.add(c);
             allAvailableCards.remove(new CardComparator(oppLastCard));
 
             opponentCardID++;
@@ -325,12 +328,20 @@ public class DreamDestroyer extends Player {
         return action;
     }
 
-    private class CardComparator {
+    private class CardComparator implements Comparable<CardComparator> {
         public Card card;
 
         public CardComparator(Card card) {
             this.card = card;
         }
+        
+        @Override
+        public int compareTo(CardComparator o) {
+            if(equals(o)) return 0;
+            return (int)Math.signum(card.getRank() - o.card.getRank());
+        }
+        
+        
 
         @Override
         public boolean equals(Object obj) {
