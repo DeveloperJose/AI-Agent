@@ -17,7 +17,7 @@ public class GameMaster {
                                             // much detail printed to console
     private static int numGames = 5; // use a small number for quick tests, a
                                       // large one to be comprehensive
-    private static int parameterSetting = 1; // see changeParameters()
+    private static int parameterSetting = 3; // see changeParameters()
 
     /**
      * You should edit this method to include your player agent
