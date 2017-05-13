@@ -12,7 +12,7 @@ public class BoyFromSchool extends Player {
     protected final String newName = "BoyFromSchool";
 
     // For printing debugging stuff
-    private static final boolean isVerbose = false;
+    private static final boolean isVerbose = true;
 
     // From my own testing of 20, 30, and 50 games with different uncertainty
     // You seem to only win a handful more games in exchange for a lower hand
@@ -50,7 +50,7 @@ public class BoyFromSchool extends Player {
         if (!isVerbose)
             return;
 
-        System.out.printf(format + "\n", args);
+        System.out.printf("[BS]" + format + "\n", args);
     }
 
     /**
@@ -198,14 +198,14 @@ public class BoyFromSchool extends Player {
         println("Avoided infinite loop");
         return new Action(ActionType.MOVE, neighborID);
     }
-
+    ArrayList<Integer> visited = new ArrayList<>();
     public Action makeAction() {
         // Check the strength of our current node and neighbors.
         // Pick the one with the highest pair strength
         double highestStrength = getPairStrength(getPossibleCards(currentNode));
         int nodeID = currentNode;
 
-        ArrayList<Integer> visited = new ArrayList<>();
+        
         visited.add(nodeID);
         LinkedList<Integer> queue = new LinkedList<Integer>();
         queue.add(currentNode);

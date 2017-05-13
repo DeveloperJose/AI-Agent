@@ -13,11 +13,11 @@ import java.util.ArrayList;
  */
 public class GameMaster {
 
-    private static boolean verbose = false; // Set to false if you do not want
-                                           // much detail printed to console
-    private static int numGames = 10; // use a small number for quick tests, a
-                                     // large one to be comprehensive
-    private static int parameterSetting = 3; // see changeParameters()
+    private static boolean verbose = true; // Set to false if you do not want
+                                            // much detail printed to console
+    private static int numGames = 5; // use a small number for quick tests, a
+                                      // large one to be comprehensive
+    private static int parameterSetting = 1; // see changeParameters()
 
     /**
      * You should edit this method to include your player agent
@@ -33,9 +33,9 @@ public class GameMaster {
             return new HankScorpio();
         else if (name.equalsIgnoreCase("20XX"))
             return new _20XX();
-        else if(name.equalsIgnoreCase("BoyFromSchool"))
+        else if (name.equalsIgnoreCase("BoyFromSchool"))
             return new BoyFromSchool();
-        else if(name.equalsIgnoreCase("DreamDestroyer"))
+        else if (name.equalsIgnoreCase("DreamDestroyer"))
             return new DreamDestroyer();
 
         return null;
@@ -72,7 +72,7 @@ public class GameMaster {
                         evaluateHands(hands[2], hands[3], ranks, wins, p1, p2, players);
                         if (verbose)
                             System.out.println();
-                        
+
                     }
                 }
             }
@@ -128,8 +128,7 @@ public class GameMaster {
      * @param p2 player 2
      * @param gameSeed seed for the game
      */
-    public static void initializePlayers(Graph g, PlayerProfile p1Profile, Player p1, PlayerProfile p2Profile,
-            Player p2, int gameSeed) {
+    public static void initializePlayers(Graph g, PlayerProfile p1Profile, Player p1, PlayerProfile p2Profile, Player p2, int gameSeed) {
         // Player 1
         p1.setGraph(Parser.parseGraph(gameSeed + ".hidden").generateHiddenGraph());
         p1Profile.setCurrentHand(Parser.parseHand(gameSeed, 1));// player 1
@@ -139,7 +138,7 @@ public class GameMaster {
         p1.setCurrentNode(p1Profile.getCurrentLocation());
 
         // Player 2
-        p2.setGraph(Parser.parseGraph(gameSeed+".hidden").generateHiddenGraph());
+        p2.setGraph(Parser.parseGraph(gameSeed + ".hidden").generateHiddenGraph());
         p2Profile.setCurrentHand(Parser.parseHand(gameSeed, 2));
         p2Profile.setCurrentLocation(1);
         // Update the player 2
@@ -199,20 +198,18 @@ public class GameMaster {
                         // currentPlayer.addCardToHand(new
                         // Card(graph[a.nodeID].getCard().toString()));
                         cpProfile.addCardToHand(new Card(graph[a.nodeID].getCard().toString()));
-                        tryPlayer(new PlayerDriver(PlayerState.OPP_RESULT, opponent, a.nodeID, true,
-                                new Card(graph[a.nodeID].getCard().toString()))); // Try
-                                                                                  // to
-                                                                                  // notify
-                                                                                  // opponent
-                                                                                  // of
-                                                                                  // result
-                        tryPlayer(new PlayerDriver(PlayerState.RESULT, currentPlayer, a.nodeID,
-                                new Card(graph[a.nodeID].getCard().toString()))); // Try
-                                                                                  // to
-                                                                                  // notify
-                                                                                  // player
-                                                                                  // of
-                                                                                  // result
+                        tryPlayer(new PlayerDriver(PlayerState.OPP_RESULT, opponent, a.nodeID, true, new Card(graph[a.nodeID].getCard().toString()))); // Try
+                                                                                                                                                       // to
+                                                                                                                                                       // notify
+                                                                                                                                                       // opponent
+                                                                                                                                                       // of
+                                                                                                                                                       // result
+                        tryPlayer(new PlayerDriver(PlayerState.RESULT, currentPlayer, a.nodeID, new Card(graph[a.nodeID].getCard().toString()))); // Try
+                                                                                                                                                  // to
+                                                                                                                                                  // notify
+                                                                                                                                                  // player
+                                                                                                                                                  // of
+                                                                                                                                                  // result
                         // opponent.opponentAction(a.nodeID, true, new
                         // Card(graph[a.nodeID].getCard().toString()));
                         // currentPlayer.actionResult(a.nodeID, new
@@ -220,8 +217,7 @@ public class GameMaster {
                         graph[a.nodeID].clearPossibleCards(); // remove all
                                                               // possible cards
                         if (verbose)
-                            System.out.println(currentPlayer.getName() + " picked up a "
-                                    + graph[a.nodeID].getCard().toString() + " at node " + a.nodeID);
+                            System.out.println(currentPlayer.getName() + " picked up a " + graph[a.nodeID].getCard().toString() + " at node " + a.nodeID);
                     } else { // The node's card has already been picked up
                              // opponent.opponentAction(a.nodeID, false, null);
                              // currentPlayer.actionResult(a.nodeID,null);
@@ -238,8 +234,7 @@ public class GameMaster {
                                                                                                         // of
                                                                                                         // result
                         if (verbose)
-                            System.out.println(currentPlayer.getName() + " attempted to pick up a card at node "
-                                    + a.nodeID + ", but nothing was there");
+                            System.out.println(currentPlayer.getName() + " attempted to pick up a card at node " + a.nodeID + ", but nothing was there");
                     }
                     break;
                 default:
@@ -249,13 +244,12 @@ public class GameMaster {
                                                                                                           // opponent
                                                                                                           // of
                                                                                                           // result
-                    tryPlayer(
-                            new PlayerDriver(PlayerState.RESULT, currentPlayer, cpProfile.getCurrentLocation(), null)); // Try
-                                                                                                                        // to
-                                                                                                                        // notify
-                                                                                                                        // player
-                                                                                                                        // of
-                                                                                                                        // result
+                    tryPlayer(new PlayerDriver(PlayerState.RESULT, currentPlayer, cpProfile.getCurrentLocation(), null)); // Try
+                                                                                                                          // to
+                                                                                                                          // notify
+                                                                                                                          // player
+                                                                                                                          // of
+                                                                                                                          // result
                     // opponent.opponentAction(a.nodeID, false, null);
                     // currentPlayer.actionResult(cpProfile.getCurrentLocation(),null);
                     if (verbose)
@@ -388,8 +382,7 @@ public class GameMaster {
                                                                      // are
                                                                      // valid
             System.out.println("ERROR: CHECK THAT PLAYER NAMES ARE VALID");
-            System.out.println(
-                    "Ensure that you altered GameMaster.getPlayer() properly to add your agent and that the names match");
+            System.out.println("Ensure that you altered GameMaster.getPlayer() properly to add your agent and that the names match");
             return null;
         }
         if (verbose)
@@ -436,8 +429,7 @@ public class GameMaster {
      * @param players array of players used to get their names
      */
 
-    private static void evaluateHands(Hand hand1, Hand hand2, float[] ranks, double[] wins, int p1, int p2,
-            ArrayList<Player> players) {
+    private static void evaluateHands(Hand hand1, Hand hand2, float[] ranks, double[] wins, int p1, int p2, ArrayList<Player> players) {
         HandEvaluator hEval = new HandEvaluator();
         if (hand1.size() != Parameters.MAX_HAND && hand2.size() != Parameters.MAX_HAND) {
             if (verbose)
@@ -447,15 +439,13 @@ public class GameMaster {
             wins[p2]++;
             ranks[p2] += hEval.rankHand(hand2);
             if (verbose)
-                System.out.println(players.get(p2).getName() + " wins by default with "
-                        + HandEvaluator.nameHand(hEval.rankHand(hand2)));
+                System.out.println(players.get(p2).getName() + " wins by default with " + HandEvaluator.nameHand(hEval.rankHand(hand2)));
         } else if (hand2.size() != Parameters.MAX_HAND) {// p1 made it to 5 but
                                                          // p2 didn't
             wins[p1]++;
             ranks[p1] += hEval.rankHand(hand2);
             if (verbose)
-                System.out.println(players.get(p1).getName() + " wins by default with "
-                        + HandEvaluator.nameHand(hEval.rankHand(hand1)));
+                System.out.println(players.get(p1).getName() + " wins by default with " + HandEvaluator.nameHand(hEval.rankHand(hand1)));
         } else {// both players finished
             float rank1 = hEval.rankHand(hand1);
             float rank2 = hEval.rankHand(hand2);
@@ -463,19 +453,16 @@ public class GameMaster {
             {// p1 wins
                 wins[p1]++;
                 if (verbose)
-                    System.out.println(players.get(p1).getName() + " wins with " + HandEvaluator.nameHand(rank1)
-                            + " against " + players.get(p2).getName() + " " + HandEvaluator.nameHand(rank2));
+                    System.out.println(players.get(p1).getName() + " wins with " + HandEvaluator.nameHand(rank1) + " against " + players.get(p2).getName() + " " + HandEvaluator.nameHand(rank2));
             } else if (rank1 < rank2) {// p2 wins
                 wins[p2]++;
                 if (verbose)
-                    System.out.println(players.get(p1).getName() + " lost with " + HandEvaluator.nameHand(rank1)
-                            + " against " + players.get(p2).getName() + " " + HandEvaluator.nameHand(rank2));
+                    System.out.println(players.get(p1).getName() + " lost with " + HandEvaluator.nameHand(rank1) + " against " + players.get(p2).getName() + " " + HandEvaluator.nameHand(rank2));
             } else {// draw
                 wins[p1] += .5;
                 wins[p2] += .5;
                 if (verbose)
-                    System.out.println(players.get(p1).getName() + " drew with " + HandEvaluator.nameHand(rank1)
-                            + " against " + players.get(p2).getName() + " " + HandEvaluator.nameHand(rank2));
+                    System.out.println(players.get(p1).getName() + " drew with " + HandEvaluator.nameHand(rank1) + " against " + players.get(p2).getName() + " " + HandEvaluator.nameHand(rank2));
             }
             ranks[p1] += rank1;
             ranks[p2] += rank2;

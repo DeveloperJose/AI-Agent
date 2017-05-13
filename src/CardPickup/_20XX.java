@@ -49,7 +49,7 @@ public class _20XX extends Player {
         if (!isVerbose)
             return;
 
-        System.out.printf(format + "\n", args);
+        System.out.printf("[20XX]" + format + "\n", args);
     }
 
     /**
