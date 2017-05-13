@@ -9,15 +9,15 @@ import java.util.*;
  * @version 04/27/20XX
  */
 public class DreamDestroyer extends Player {
-
     protected final String newName = "DreamDestroyer";
     protected static final boolean isVerbose = true;
 
     // A*
     private PriorityQueue<ABox> frontier;
 
-    private Set<CardComparator> allAvailableCards;
-
+    //private Set<CardComparator> allAvailableCards;
+    private Set<Card> allAvailableCards;
+    
     // Used for random number generation
     private Random rand;
 
@@ -86,20 +86,20 @@ public class DreamDestroyer extends Player {
                 nIntegers.add(neighbor.getNodeID());
 
                 for (Card card : neighbor.getPossibleCards()) {
-                    allAvailableCards.add(new CardComparator(card));
+                    allAvailableCards.add(card);
                 }
             }
             println("Node %s, %s", i, Arrays.toString(nIntegers.toArray()));
         }
         
         String str = "";
-        for(CardComparator card : allAvailableCards){
-            str += card.card.shortName() + ", ";
+        for(Card card : allAvailableCards){
+            str += card.shortName() + ", ";
         }
         println("Str: " + str);
         // Remove cards we have in our hand
         for (int i = 0; i < hand.getNumHole(); i++) {
-            allAvailableCards.remove(new CardComparator(hand.getHoleCard(i)));
+            allAvailableCards.remove(hand.getHoleCard(i));
         }
 
         visited = new boolean[graph.length];
@@ -155,7 +155,8 @@ public class DreamDestroyer extends Player {
             oppLastCard = c;
             // Update our memory of opponent cards
             opponentCards.add(c);
-            allAvailableCards.remove(new CardComparator(oppLastCard));
+            
+            allAvailableCards.remove(oppLastCard);
 
             opponentCardID++;
 
@@ -181,7 +182,7 @@ public class DreamDestroyer extends Player {
             addCardToHand(c);
 
             // Update our list of cards
-            allAvailableCards.remove(new CardComparator(c));
+            allAvailableCards.remove(c);
 
             // We can't pick a card here anymore so clear the node in the graph
             graph[currentNode].clearPossibleCards();
@@ -222,33 +223,33 @@ public class DreamDestroyer extends Player {
             }
         } else if (remainingCards == 2) {
             for (Card card : possibleCards) {
-                for (CardComparator other : allAvailableCards) {
+                for (Card other : allAvailableCards) {
                     // No duplicates
-                    if (other.equals(card))
+                    if (other.compareTo(card) == 0)
                         continue;
 
                     Hand h2 = copyCurrentHand();
                     h2.addHoleCard(card);
-                    h2.addHoleCard(other.card);
+                    h2.addHoleCard(other);
                     bestRank = Math.max(bestRank, handEvaluator.rankHand(h2));
                 }
             }
         } else if (remainingCards == 3) {
             for (Card card : possibleCards) {
-                for (CardComparator other : allAvailableCards) {
+                for (Card other : allAvailableCards) {
                     // No duplicates
-                    if (other.equals(card))
+                    if (other.compareTo(card) == 0)
                         continue;
 
-                    for (CardComparator other2 : allAvailableCards) {
+                    for (Card other2 : allAvailableCards) {
                         // No duplicates
-                        if (other2.equals(card))
+                        if (other2.compareTo(card) == 0)
                             continue;
 
                         Hand h2 = copyCurrentHand();
                         h2.addHoleCard(card);
-                        h2.addHoleCard(other.card);
-                        h2.addHoleCard(other2.card);
+                        h2.addHoleCard(other);
+                        h2.addHoleCard(other2);
                         bestRank = Math.max(bestRank, handEvaluator.rankHand(h2));
                     }
                 }
@@ -327,7 +328,7 @@ public class DreamDestroyer extends Player {
         println("Action took %s out of %s", System.currentTimeMillis() - startTime, Parameters.ACTION_TIME);
         return action;
     }
-
+/*
     private class CardComparator implements Comparable<CardComparator> {
         public Card card;
 
@@ -362,7 +363,7 @@ public class DreamDestroyer extends Player {
             return false;
         }
     }
-
+*/
     private class ABox implements Comparator<ABox>, Comparable<ABox> {
         public boolean isExplored = false;
 
@@ -450,5 +451,4 @@ public class DreamDestroyer extends Player {
             return obj1.compareTo(obj2);
         }
     }
-
 }
