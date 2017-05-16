@@ -3,100 +3,39 @@ package CardPickup;
 import java.util.*;
 
 /**
- * Simple Functional Agent
- * Attempts to create pairs based on their own hand and neighbors
+ * This agent picks the best permutations and travels using A*
  * @author Jose Perez, Tomas Chagoya, Brandon Delgado
  * @version 04/27/20XX
  */
 public class DreamDestroyer extends Player {
     protected final String newName = "DreamDestroyer";
-    protected static final boolean isVerbose = true;
+    protected static final boolean isVerbose = false;
 
-    // A*
+    // A* frontier
     private PriorityQueue<ABox> frontier;
 
-    //private Set<CardComparator> allAvailableCards;
+    // All cards available in the game
     private Set<Card> allAvailableCards;
-    
-    // Used for random number generation
-    private Random rand;
 
+    // All the cards the opponent has picked up
     private List<Card> opponentCards;
-    private int opponentCardID;
 
-    private boolean isCertain;
-
+    // Used for evaluation of hands
     private HandEvaluator handEvaluator;
+
+    // Nodes we have visited
     private boolean[] visited;
-
-    private ABox fromNode(Node n, int depth) {
-        ABox abox = new ABox(n);
-        abox.g = depth;
-        abox.f = getPairStrength(getPossibleCards(n.getNodeID()));
-        return abox;
-    }
-
-    public int maxDepth() {
-        return turnsRemaining - (5 - hand.size());
-    }
-
-    private void updateFrontierRecursive(int nodeID, int depth) {
-        // We cannot consider nodes that would take too long to get to
-        // Or nodes that we already considered
-        if (depth > maxDepth() || visited[nodeID])
-            return;
-
-        visited[nodeID] = true;
-        ABox parentBox = fromNode(graph[nodeID], depth);
-
-        // Check neighbors first. They are the same depth as the parent
-        for (Node neighbor : graph[nodeID].getNeighborList()) {
-            if (!visited[neighbor.getNodeID()]) {
-                visited[neighbor.getNodeID()] = true;
-
-                // Neighbors are the same depth
-                ABox neighborBox = fromNode(neighbor, depth);
-                frontier.add(neighborBox);
-            }
-        }
-
-        // Check neighbors of neighbors.
-        // It takes 1 turn to go there so increase depth
-        for (Node neighbor : graph[nodeID].getNeighborList())
-            for (Node neighbor2 : neighbor.getNeighborList())
-                updateFrontierRecursive(neighbor2.getNodeID(), depth + 1);
-
-        frontier.add(parentBox);
-    }
-
-    private void updateFrontier() {
-        visited = new boolean[graph.length];
-        updateFrontierRecursive(currentNode, 0);
-    }
 
     public void initialize() {
         long startTime = System.currentTimeMillis();
 
+        // Get all available cards in the game
         allAvailableCards = new TreeSet<>();
-        
-
-        for (int i = 0; i < graph.length; i++) {
-            List<Integer> nIntegers = new ArrayList<>();
-            for (Node neighbor : graph[i].getNeighborList()) {
-                nIntegers.add(neighbor.getNodeID());
-
-                for (Card card : neighbor.getPossibleCards()) {
+        for (int i = 0; i < graph.length; i++)
+            for (Node neighbor : graph[i].getNeighborList())
+                for (Card card : neighbor.getPossibleCards())
                     allAvailableCards.add(card);
-                }
-            }
-            println("Node %s, %s", i, Arrays.toString(nIntegers.toArray()));
-        }
-        
-        String str = "";
-        for(Card card : allAvailableCards){
-            str += card.shortName() + ", ";
-        }
-        println("Str: " + str);
+
         // Remove cards we have in our hand
         for (int i = 0; i < hand.getNumHole(); i++) {
             allAvailableCards.remove(hand.getHoleCard(i));
@@ -104,10 +43,7 @@ public class DreamDestroyer extends Player {
 
         visited = new boolean[graph.length];
         frontier = new PriorityQueue<>();
-        rand = new Random(System.nanoTime());
         opponentCards = new ArrayList<>();
-        opponentCardID = 0;
-        isCertain = Parameters.NUM_POSSIBLE_CARDS == 1;
         handEvaluator = new HandEvaluator();
 
         long duration = System.currentTimeMillis() - startTime;
@@ -155,10 +91,8 @@ public class DreamDestroyer extends Player {
             oppLastCard = c;
             // Update our memory of opponent cards
             opponentCards.add(c);
-            
-            allAvailableCards.remove(oppLastCard);
 
-            opponentCardID++;
+            allAvailableCards.remove(oppLastCard);
 
             // We can't pick a card there anymore so clear the node in the graph
             graph[opponentNode].clearPossibleCards();
@@ -290,11 +224,10 @@ public class DreamDestroyer extends Player {
         println("%s/%s turns remain (%s cards required)", turnsRemaining, Parameters.NUM_TURNS, 5 - hand.size());
         println("%s depth allowed", maxDepth());
 
-        // Debug
-        println("We are currently at: %s", currentNode);
-        for (Node neighbor : graph[currentNode].getNeighborList()) {
-            println("We are next to %s", neighbor.getNodeID());
-        }
+        // println("We are currently at: %s", currentNode);
+        // for (Node neighbor : graph[currentNode].getNeighborList()) {
+        // println("We are next to %s", neighbor.getNodeID());
+        // }
 
         // Predict our best move
         updateFrontier();
@@ -307,17 +240,12 @@ public class DreamDestroyer extends Player {
         // bestHand.parentNode.getNodeID(), bestHand.g);
 
         // println("Frontier size: %s", frontier.size());
-        println("The best hand right now is: %s, %s, %s", HandEvaluator.nameHand(bestHand.f), bestHand.f, bestHand.g);
+        // println("The best hand right now is: %s, %s, %s",
+        // HandEvaluator.nameHand(bestHand.f), bestHand.f, bestHand.g);
 
         // What should we do?!?
         Action action = bestHand.getAction(graph[currentNode]);
-        println("Best hand wants to %s to %s", action.move, action.nodeID);
-
-        String str = "";
-        for (Card card : graph[action.nodeID].getPossibleCards()) {
-            str += card.shortName() + ", ";
-        }
-        println("Node has cards %s", str);
+        // println("Best hand wants to %s to %s", action.move, action.nodeID);
 
         // Clear all of our A* frontier
         frontier.clear();
@@ -328,57 +256,69 @@ public class DreamDestroyer extends Player {
         println("Action took %s out of %s", System.currentTimeMillis() - startTime, Parameters.ACTION_TIME);
         return action;
     }
-/*
-    private class CardComparator implements Comparable<CardComparator> {
-        public Card card;
 
-        public CardComparator(Card card) {
-            this.card = card;
-        }
-        
-        @Override
-        public int compareTo(CardComparator o) {
-            if(equals(o)) return 0;
-            return (int)Math.signum(card.getRank() - o.card.getRank());
-        }
-        
-        
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-
-            if (obj instanceof Card) {
-                Card card2 = (Card) obj;
-                return card.getRank() == card2.getRank() && card.getSuit() == card2.getSuit();
-            } else if (obj instanceof CardComparator) {
-                CardComparator comp2 = (CardComparator) obj;
-                Card card2 = comp2.card;
-                return card.getRank() == card2.getRank() && card.getSuit() == card2.getSuit();
-            }
-
-            return false;
-        }
+    /**
+     * Create a node for A*
+     */
+    private ABox fromNode(Node n, int depth) {
+        ABox abox = new ABox(n);
+        abox.g = depth;
+        abox.f = getPairStrength(getPossibleCards(n.getNodeID()));
+        return abox;
     }
-*/
-    private class ABox implements Comparator<ABox>, Comparable<ABox> {
-        public boolean isExplored = false;
 
+    /**
+     * How far can we go into the search?
+     */
+    public int maxDepth() {
+        return turnsRemaining - (5 - hand.size());
+    }
+
+    private void updateFrontierRecursive(int nodeID, int depth) {
+        // We cannot consider nodes that would take too long to get to
+        // Or nodes that we already considered
+        if (depth > maxDepth() || visited[nodeID])
+            return;
+
+        visited[nodeID] = true;
+        ABox parentBox = fromNode(graph[nodeID], depth);
+
+        // Check neighbors first. They are the same depth as the parent
+        for (Node neighbor : graph[nodeID].getNeighborList()) {
+            if (!visited[neighbor.getNodeID()]) {
+                visited[neighbor.getNodeID()] = true;
+
+                // Neighbors are the same depth
+                ABox neighborBox = fromNode(neighbor, depth);
+                frontier.add(neighborBox);
+            }
+        }
+
+        // Check neighbors of neighbors.
+        // It takes 1 turn to go there so increase depth
+        for (Node neighbor : graph[nodeID].getNeighborList())
+            for (Node neighbor2 : neighbor.getNeighborList())
+                updateFrontierRecursive(neighbor2.getNodeID(), depth + 1);
+
+        frontier.add(parentBox);
+    }
+
+    private void updateFrontier() {
+        visited = new boolean[graph.length];
+        updateFrontierRecursive(currentNode, 0);
+    }
+
+    /**
+     * Nodes for A* search
+     */
+    private class ABox implements Comparator<ABox>, Comparable<ABox> {
         public float f = -1;
-        public float h = -1;
         public int g = -1;
 
         public Node parentNode;
-        // public ABox parentABox;
-        // public List<ABox> children;
 
         public ABox(Node parentNode) {
             this.parentNode = parentNode;
-            // this.parentABox = parentABox;
-            // this.children = new ArrayList<>();
         }
 
         public Action getAction(Node currentNode) {
@@ -429,12 +369,6 @@ public class DreamDestroyer extends Player {
 
             ABox other = (ABox) obj;
             return other.parentNode.getNodeID() == parentNode.getNodeID();
-        }
-
-        public String toString() {
-            return super.toString();
-            // return String.format("(p=%s,c=%s,e=%s)", position, cost,
-            // isExplored);
         }
 
         public int compareTo(ABox otherNode) {

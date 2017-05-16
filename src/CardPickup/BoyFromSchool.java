@@ -4,7 +4,7 @@ import java.util.*;
 
 /**
  * Breadth First Search based Agent
- * Attempts to create pairs based on their own hand and neighbors
+ * Attempts to create pairs based on their own hand and other cards in the graph
  * @author Jose Perez, Tomas Chagoya, Brandon Delgado
  * @version 04/27/20XX
  */
@@ -12,7 +12,7 @@ public class BoyFromSchool extends Player {
     protected final String newName = "BoyFromSchool";
 
     // For printing debugging stuff
-    private static final boolean isVerbose = true;
+    private static final boolean isVerbose = false;
 
     // From my own testing of 20, 30, and 50 games with different uncertainty
     // You seem to only win a handful more games in exchange for a lower hand
@@ -50,7 +50,7 @@ public class BoyFromSchool extends Player {
         if (!isVerbose)
             return;
 
-        System.out.printf("[BS]" + format + "\n", args);
+        System.out.printf(format + "\n", args);
     }
 
     /**
@@ -176,9 +176,14 @@ public class BoyFromSchool extends Player {
             Card cardInOpponent = opponentCards.get(i);
             possible.remove(cardInOpponent);
         }
+
         return possible;
     }
 
+    /**
+     * Makes a random choice to move to a neighbor node
+     * @return an Action
+     */
     public Action getActionRandom() {
         int loopCount = 0;
         int randomIndex;
@@ -198,17 +203,23 @@ public class BoyFromSchool extends Player {
         println("Avoided infinite loop");
         return new Action(ActionType.MOVE, neighborID);
     }
-    ArrayList<Integer> visited = new ArrayList<>();
+
+    ArrayList<Integer> visited = new ArrayList<Integer>();
+
+    /**
+     * Breadth First Search based makeAction that travels the whole graph
+     * and uses an ArrayList to check for visited nodes to avoid infinite loops
+     * @return an Action, either a random MOVE or a card PICKUP
+     */
     public Action makeAction() {
         // Check the strength of our current node and neighbors.
         // Pick the one with the highest pair strength
         double highestStrength = getPairStrength(getPossibleCards(currentNode));
         int nodeID = currentNode;
 
-        
         visited.add(nodeID);
         LinkedList<Integer> queue = new LinkedList<Integer>();
-        queue.add(currentNode);
+        queue.add(nodeID);
         int temp = 0;
 
         while (queue.size() != 0) {

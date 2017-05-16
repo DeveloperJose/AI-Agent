@@ -13,11 +13,11 @@ import java.util.ArrayList;
  */
 public class GameMaster {
 
-    private static boolean verbose = true; // Set to false if you do not want
+    private static boolean verbose = false; // Set to false if you do not want
                                             // much detail printed to console
-    private static int numGames = 5; // use a small number for quick tests, a
+    private static int numGames = 50; // use a small number for quick tests, a
                                       // large one to be comprehensive
-    private static int parameterSetting = 5; // see changeParameters()
+    private static int parameterSetting = 0; // see changeParameters()
 
     /**
      * You should edit this method to include your player agent
@@ -37,6 +37,8 @@ public class GameMaster {
             return new BoyFromSchool();
         else if (name.equalsIgnoreCase("DreamDestroyer"))
             return new DreamDestroyer();
+        else if(name.equalsIgnoreCase("Yamcha"))
+            return new Yamcha();
 
         return null;
     }
@@ -55,8 +57,9 @@ public class GameMaster {
         //players.add(new MaxPower());
         //players.add(new HankScorpio());
         players.add(new _20XX());
-        //players.add(new BoyFromSchool());
+        players.add(new BoyFromSchool());
         players.add(new DreamDestroyer());
+        players.add(new Yamcha());
 
         float[] ranks = new float[players.size()];
         double[] wins = new double[players.size()];
