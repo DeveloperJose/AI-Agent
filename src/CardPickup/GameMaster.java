@@ -2,6 +2,8 @@ package CardPickup;
 
 import java.util.ArrayList;
 
+import CardPickup.player.Zeeky;
+
 /**
  * Play a graph variant of Poker.
  * Add your agent to the list of agents in main() AND to the getPlayer() method
@@ -15,9 +17,9 @@ public class GameMaster {
 
     private static boolean verbose = false; // Set to false if you do not want
                                             // much detail printed to console
-    private static int numGames = 50; // use a small number for quick tests, a
+    private static int numGames = 5; // use a small number for quick tests, a
                                       // large one to be comprehensive
-    private static int parameterSetting = 0; // see changeParameters()
+    private static int parameterSetting = 5; // see changeParameters()
 
     /**
      * You should edit this method to include your player agent
@@ -39,7 +41,13 @@ public class GameMaster {
             return new DreamDestroyer();
         else if(name.equalsIgnoreCase("Yamcha"))
             return new Yamcha();
-
+        else if(name.equalsIgnoreCase("BedThoughts"))
+            return new BedThoughts();
+        else if(name.equalsIgnoreCase("Zeeky"))
+            return new Zeeky();
+        else if(name.equalsIgnoreCase("ZeekyStronger"))
+            return new ZeekyStronger();
+        
         return null;
     }
 
@@ -53,13 +61,16 @@ public class GameMaster {
         generateGraphs(numGames);
 
         ArrayList<Player> players = new ArrayList<Player>();
-        //players.add(new TestPlayer());
-        //players.add(new MaxPower());
-        //players.add(new HankScorpio());
+        players.add(new TestPlayer());
+        players.add(new MaxPower());
+        players.add(new HankScorpio());
         players.add(new _20XX());
         players.add(new BoyFromSchool());
         players.add(new DreamDestroyer());
         players.add(new Yamcha());
+        players.add(new BedThoughts());
+        players.add(new Zeeky());
+        players.add(new ZeekyStronger());
 
         float[] ranks = new float[players.size()];
         double[] wins = new double[players.size()];
